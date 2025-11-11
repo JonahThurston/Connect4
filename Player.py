@@ -344,7 +344,7 @@ class MCTSNode:
   def print_tree(self):
     #Debugging utility that will print the whole subtree starting at this node
     print("****")
-    print_node(self)
+    self.print_node(self)
     for m in self.moves:
       if self.children[m]:
         self.children[m].print_tree()
