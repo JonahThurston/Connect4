@@ -204,7 +204,7 @@ class AIPlayer:
 
     # points for number of tokens in a potential winning line
     ownScoreLookup = {1: 1, 2: 10, 3: 50}
-    oppScoreLookup = {1: -2, 2: -12, 3: -60} #making these numbers a bit bigger should make it play more defensively
+    oppScoreLookup = {1: -1, 2: -10, 3: -60} #making these numbers a bit bigger should make it play more defensively
 
     def score_line(line):
       ownCount = np.count_nonzero(line == self.player_number)
