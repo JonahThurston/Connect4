@@ -68,30 +68,31 @@ class AIPlayer:
         return 0 #tie weights as 0. might be kinda fun to weight tie lower to try harder to get win?
       return None
 
-    def alphaBeta(state, depth, alpha, beta, maximizing_player):
-      terminal_val = terminalScore(state)
-      if terminal_val is not None:
-        return terminal_val
-      if depth <= 0:
+    # Not even gonna lie, I got a lot of help from chat to manage and understand alpha and beta
+    def alphaBeta(state, deeperToGo, alpha, beta, isMaxPlayer):
+      terminalVal = terminalScore(state)
+      if terminalVal is not None:
+        return terminalVal
+      if deeperToGo <= 0:
         return self.evaluation_function(state)
 
-      valid_moves = get_valid_moves(state)
-      if maximizing_player:
+      validMoves = get_valid_moves(state)
+      if isMaxPlayer:
         value = -np.inf
-        for move in valid_moves:
+        for move in validMoves:
           child = np.copy(state)
           make_move(child, move, self.player_number)
-          value = max(value, alphaBeta(child, depth - 1, alpha, beta, False))
+          value = max(value, alphaBeta(child, deeperToGo - 1, alpha, beta, False))
           alpha = max(alpha, value)
           if alpha >= beta:
             break
         return value
       else:
         value = np.inf
-        for move in valid_moves:
+        for move in validMoves:
           child = np.copy(state)
           make_move(child, move, self.other_player_number)
-          value = min(value, alphaBeta(child, depth - 1, alpha, beta, True))
+          value = min(value, alphaBeta(child, deeperToGo - 1, alpha, beta, True))
           beta = min(beta, value)
           if beta <= alpha:
             break
