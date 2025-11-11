@@ -53,11 +53,65 @@ class AIPlayer:
     The 0 based index of the column that represents the next move
     """
     moves = get_valid_moves(board)
-    best_move = np.random.choice(moves)
+    # If this ever triggered smth really dumb happened. 
+    if not moves:
+      return None
 
-    #YOUR ALPHA-BETA CODE GOES HERE
+    np.random.shuffle(moves)  # chat suggested this and i think its fun. randomize move order to avoid biasing ties. might remove if its slow
 
-    return best_move
+    def terminalScore(state):
+      if is_winning_state(state, self.player_number):
+        return float('inf')
+      if is_winning_state(state, self.other_player_number):
+        return float('-inf')
+      if not get_valid_moves(state):
+        return 0 #tie weights as 0. might be kinda fun to weight tie lower to try harder to get win?
+      return None
+
+    def alphaBeta(state, depth, alpha, beta, maximizing_player):
+      terminal_val = terminalScore(state)
+      if terminal_val is not None:
+        return terminal_val
+      if depth <= 0:
+        return self.evaluation_function(state)
+
+      valid_moves = get_valid_moves(state)
+      if maximizing_player:
+        value = -np.inf
+        for move in valid_moves:
+          child = np.copy(state)
+          make_move(child, move, self.player_number)
+          value = max(value, alphaBeta(child, depth - 1, alpha, beta, False))
+          alpha = max(alpha, value)
+          if alpha >= beta:
+            break
+        return value
+      else:
+        value = np.inf
+        for move in valid_moves:
+          child = np.copy(state)
+          make_move(child, move, self.other_player_number)
+          value = min(value, alphaBeta(child, depth - 1, alpha, beta, True))
+          beta = min(beta, value)
+          if beta <= alpha:
+            break
+        return value
+
+    bestValue = -np.inf
+    bestMoves = []
+
+    for move in moves:
+      newBoard = np.copy(board)
+      make_move(newBoard, move, self.player_number)
+      value = alphaBeta(newBoard, self.depth_limit - 1, -np.inf, np.inf, False)
+      # I was having issues with floating point stuff. I asked chat and this +1e-9 and isclose() stuff seemed to fix it.
+      if value > bestValue + 1e-9: 
+        bestValue = value
+        bestMoves = [move]
+      elif np.isclose(value, bestValue): 
+        bestMoves.append(move)
+
+    return np.random.choice(bestMoves if bestMoves else moves)
 
 
   def get_mcts_move(self, board):
@@ -173,6 +227,7 @@ class AIPlayer:
       for r in range(rows - 3):
         score += score_line(board[r:r+4, c])
 
+    # In theory there is probably a cooler faster way to do diag window gathering. But im not a numpy expert. See win check function for inspo tho.
     # down-right diagonals
     for r in range(rows - 3):
       for c in range(cols - 3):
