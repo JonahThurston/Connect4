@@ -133,9 +133,59 @@ class AIPlayer:
     The utility value for the current board
     """
 
-    #YOUR EVALUATION FUNCTION GOES HERE
+    # I thiiiiink we aren't ever going to need these, because we only looking at non-terminal states. We should have already checked.
+    # if is_winning_state(board, self.player_number):
+    #   return float('inf')
+    # if is_winning_state(board, self.other_player_number):
+    #   return float('-inf')
 
-    return 0
+    rows, cols = board.shape
+    score = 0
+
+    # 3 points for every token in center
+    centerCol = board[:, cols // 2]
+    score += 3 * np.count_nonzero(centerCol == self.player_number)
+    score -= 3 * np.count_nonzero(centerCol == self.other_player_number)
+
+    # points for number of tokens in a potential winning line
+    ownScoreLookup = {1: 1, 2: 10, 3: 50}
+    oppScoreLookup = {1: -2, 2: -12, 3: -60} #making these numbers a bit bigger should make it play more defensively
+
+    def score_line(line):
+      ownCount = np.count_nonzero(line == self.player_number)
+      oppCount = np.count_nonzero(line == self.other_player_number)
+      #if we both have tokens on the line, its not a potential win line for either of us, so skip
+      if ownCount != 0 and oppCount != 0:
+        return 0
+      if ownCount:
+        return ownScoreLookup.get(ownCount, 0)
+      if oppCount:
+        return oppScoreLookup.get(oppCount, 0)
+      return 0
+
+    # Horizontal lines
+    for r in range(rows):
+      for c in range(cols - 3):
+        score += score_line(board[r, c:c+4])
+
+    # Vertical lines
+    for c in range(cols):
+      for r in range(rows - 3):
+        score += score_line(board[r:r+4, c])
+
+    # down-right diagonals
+    for r in range(rows - 3):
+      for c in range(cols - 3):
+        window = [board[r+i, c+i] for i in range(4)]
+        score += score_line(np.array(window))
+
+    # up-right diagonals
+    for r in range(3, rows):
+      for c in range(cols - 3):
+        window = [board[r-i, c+i] for i in range(4)]
+        score += score_line(np.array(window))
+
+    return score
 
 
 class RandomPlayer:
@@ -408,4 +458,3 @@ def is_winning_state(board, player_num):
   return (check_horizontal(board) or
       check_verticle(board) or
       check_diagonal(board))
-
